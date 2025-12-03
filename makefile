@@ -19,7 +19,7 @@ all: $(C_TARGETS) $(R_TARGETS)
 
 # Build Rust programs → output: mainrs
 %/mainrs: %/main.rs
-	rustc $< -O3 -o $@
+	rustc $< -o $@
 
 # --- Cleaning ---------------------------------------------------------------
 clean:
