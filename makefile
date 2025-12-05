@@ -1,8 +1,10 @@
 # Find all directories matching the pattern X.12, Y.12, 10.12, etc.
 SUBDIRS := $(shell find . -maxdepth 1 -type d -regex '\./[0-9]+\.12')
+
 # For each directory, check if main.c or main.rs exists
 C_DIRS  := $(foreach d,$(SUBDIRS),$(if $(wildcard $(d)/main.c),$(d),))
 R_DIRS  := $(foreach d,$(SUBDIRS),$(if $(wildcard $(d)/main.rs),$(d),))
+
 # Output targets
 C_TARGETS := $(C_DIRS:%=%/main)
 R_TARGETS := $(R_DIRS:%=%/mainrs)
@@ -13,6 +15,7 @@ VALGRIND := valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 all: $(C_TARGETS) $(R_TARGETS)
 
 # --- Build rules -------------------------------------------------------------
+
 # Build C programs → output: main
 %/main: %/main.c
 	$(CC) $< -O3 -o $@ -lm
@@ -22,10 +25,12 @@ all: $(C_TARGETS) $(R_TARGETS)
 	rustc $< -o $@
 
 # --- Cleaning ---------------------------------------------------------------
+
 clean:
 	rm -f $(C_TARGETS) $(R_TARGETS)
 
 # --- Running ----------------------------------------------------------------
+
 run: all
 	@echo "Running programs..."
 	@for d in $(SUBDIRS); do \
@@ -53,6 +58,7 @@ run: all
 	done
 
 # --- Running without Valgrind -----------------------------------------------
+
 run-fast: all
 	@echo "Running programs (without valgrind)..."
 	@for d in $(SUBDIRS); do \
@@ -60,6 +66,7 @@ run-fast: all
 			echo "==> Directory $$d"; \
 			if [ -f "$$d/main" ]; then \
 				if [ -f "$$d/input.txt" ]; then \
+					echo "Running C program"; \
 					./$$d/main $$d/input.txt; \
 				else \
 					./$$d/main; \
@@ -67,6 +74,7 @@ run-fast: all
 			fi; \
 			if [ -f "$$d/mainrs" ]; then \
 				if [ -f "$$d/input.txt" ]; then \
+					echo "Running Rust program"; \
 					./$$d/mainrs $$d/input.txt; \
 				else \
 					./$$d/mainrs; \
