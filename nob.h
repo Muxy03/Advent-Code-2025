@@ -1,6 +1,7 @@
 #ifndef NOB_H
 #define NOB_H
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -8,6 +9,7 @@
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 	#define NOB_DECLTYPE_CAST(T) (decltype(T))
@@ -38,26 +40,7 @@
          (da)->items[(da)->count++] = (item);   \
      } while (0)
 
-#define da_free(da)                \
-    do {                            \
-        free((da)->items);          \
-        (da)->items = NULL;         \
-        (da)->count = 0;            \
-        (da)->capacity = 0;         \
-    } while(0)
-
-#define da_free_deep(da)                                \
-    do {                                                \
-        if ((da)->items) {                              \
-            for (size_t i = 0; i < (da)->count; ++i)   \
-                free((da)->items[i]);                  \
-            free((da)->items);                          \
-        }                                               \
-        (da)->items = NULL;                             \
-        (da)->count = 0;                                \
-        (da)->capacity = 0;                             \
-    } while(0)
-
+// --- Dynamic array append many ---
 #define da_append_many(da, src, n)                            \
     do {                                                      \
         size_t _n = (n);                                      \
@@ -74,6 +57,48 @@
         }                                                     \
     } while(0)
 
+// --- Dynamic array free ---
+#define da_free(da)                \
+    do {                            \
+        free((da)->items);          \
+        (da)->items = NULL;         \
+        (da)->count = 0;            \
+        (da)->capacity = 0;         \
+    } while(0)
+
+// --- Dynamic array free deep ---
+#define da_free_deep(da)                                \
+    do {                                                \
+        if ((da)->items) {                              \
+            for (size_t i = 0; i < (da)->count; ++i)   \
+                free((da)->items[i]);                  \
+            free((da)->items);                          \
+        }                                               \
+        (da)->items = NULL;                             \
+        (da)->count = 0;                                \
+        (da)->capacity = 0;                             \
+    } while(0)
+
+// --- Dynamic array last ---
+#define da_last(da) (da)->items[(da)->count-1]
+
+// -- Dynamic array print ---
+#define da_print(da, fmt)                        \
+    do {                                         \
+        printf("[\n");                             \
+        for (size_t i = 0; i < (da)->count; i++) { \
+            printf(fmt "\n", (da)->items[i]);      \
+        }                                        \
+        printf("]\n");                           \
+    } while(0)
+
+// --- Dynamic array swap all ---
+#define da_swap(a, b) do { \
+    __typeof__(a.items) tmp_items = a.items; a.items = b.items; b.items = tmp_items; \
+    size_t tmp_count = a.count; a.count = b.count; b.count = tmp_count; \
+    size_t tmp_cap = a.capacity; a.capacity = b.capacity; b.capacity = tmp_cap; \
+} while(0)
+    
 // --- Types ---
 #define ll long long           // typedef long long ll;
 #define uch unsigned char      // typedef unsigned char uch;
