@@ -1,38 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
-#define ll long long
-
-#ifdef __cplusplus
-#define NOB_DECLTYPE_CAST(T) (decltype(T))
-#else
-#define NOB_DECLTYPE_CAST(T)
-#endif // __cplusplus
-
-#define da_reserve(da, expected_capacity)                                                  \
-    do {                                                                                   \
-        if ((expected_capacity) > (da)->capacity) {                                        \
-            if ((da)->capacity == 0) {                                                     \
-                (da)->capacity = 256;                                                      \
-            }                                                                              \
-            while ((expected_capacity) > (da)->capacity) {                                 \
-                (da)->capacity *= 2;                                                       \
-            }                                                                              \
-            (da)->items = NOB_DECLTYPE_CAST((da)->items)                                   \
-                realloc((da)->items, (da)->capacity * sizeof(*(da)->items));               \
-            assert((da)->items != NULL && "Out of memory");                                \
-        }                                                                                  \
-    } while (0)
-
-#define da_append(da, item)                    \
-    do {                                       \
-        da_reserve((da), (da)->count + 1);     \
-        (da)->items[(da)->count++] = (item);   \
-    } while (0)
-
-#define da_free(da) free((da).items)
+#include "../nob.h"
 
 typedef struct {
 	ll left;
@@ -49,12 +15,12 @@ typedef struct {
     ll *items;
     size_t count;
     size_t capacity;
-} DA;
+} LLDA;
 
 int compare(const void *a, const void *b)
 {
-    long long x = *(const long long *)a;
-    long long y = *(const long long *)b;
+    ll x = *(const ll *)a;
+    ll y = *(const ll *)b;
 
     if (x < y) return -1;
     if (x > y) return 1;
@@ -87,23 +53,16 @@ size_t is_fresh(Range *arr, size_t len, ll id) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-        return 1;
-    }
 
-    FILE *input = fopen(argv[1], "r");
-    if (!input) {
-        perror("Error opening file");
-        return 1;
-    }
+    FILE *input = open_input_or_die(argc, argv);
+    
 
 	char *line = NULL;
   	size_t len = 0;
   	size_t change = 0; // 0 ranges | 1 elements 
 
 	Ranges ranges = {0};
-	DA elements   = {0};
+	LLDA elements   = {0};
   	
    	while (getline(&line, &len, input) != -1) {
    		if(strlen(line) == 1){
@@ -115,27 +74,22 @@ int main(int argc, char **argv) {
 
  		if(change == 0){
  			Range r = {0};
- 			ll left = 0, right = 0;
-
-			if (sscanf(line, "%lld-%lld", &left, &right) != 2) {
+ 	
+			if (sscanf(line, "%lld-%lld", &r.left, &r.right) != 2) {
 	            fprintf(stderr, "Warning: malformed range '%s'.\n", line);
 	            exit(1);
 	        }
-
-	        r.left = left;
-	        r.right = right;
- 			
+		
  			da_append(&ranges, r);
  		}else {
  			da_append(&elements, atoll(line));
- 		}
- 		 
+ 		} 		 
    	}
 
     fclose(input);
 
-    size_t part1 = 0;
-    size_t part2 = 0;
+    ll part1 = 0;
+    ll part2 = 0;
 
     qsort(elements.items, elements.count, sizeof(ll), compare);
 	qsort(ranges.items, ranges.count, sizeof(Range), compare_ranges);
@@ -148,9 +102,7 @@ int main(int argc, char **argv) {
 	for(size_t i = 1; i < ranges.count; ++i) {
 		Range range = ranges.items[i];
 		if(range.left <= merged.items[idx].right + 1) {
-			if(range.right > merged.items[idx].right){
-				merged.items[idx].right = range.right;
-			}
+			if(range.right > merged.items[idx].right) merged.items[idx].right = range.right;
 		} else {
 			idx++;
 			da_append(&merged, range);
@@ -162,17 +114,17 @@ int main(int argc, char **argv) {
 	}
 
 	for(size_t i = 0; i < merged.count; ++i) {
-			part2 += (merged.items[i].right - merged.items[i].left) + 1;		
+		part2 += (merged.items[i].right - merged.items[i].left) + 1;		
 	}
 
-	printf("part1: %zu\n", part1);
-	printf("part2: %zu\n", part2);
+	printf("part1: %lld\n", part1);
+	printf("part2: %lld\n", part2);
     
 
     free(line);
-    da_free(ranges);
-    da_free(elements);
-    da_free(merged);
+    da_free(&ranges);
+    da_free(&elements);
+    da_free(&merged);
 
     return 0;
 }

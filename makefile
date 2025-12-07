@@ -1,5 +1,5 @@
 # Find all directories matching the pattern X.12, Y.12, 10.12, etc.
-SUBDIRS := $(shell find . -maxdepth 1 -type d -regex '\./[0-9]+\.12')
+SUBDIRS := $(shell find . -maxdepth 1 -type d -regex '\./[0-9]+\.12' | sort -V)
 
 # For each directory, check if main.c or main.rs exists
 C_DIRS  := $(foreach d,$(SUBDIRS),$(if $(wildcard $(d)/main.c),$(d),))
@@ -17,7 +17,7 @@ all: $(C_TARGETS) $(R_TARGETS)
 # --- Build rules -------------------------------------------------------------
 
 # Build C programs → output: main
-%/main: %/main.c
+%/main: %/main.c nob.h
 	$(CC) $< -O3 -o $@ -lm
 
 # Build Rust programs → output: mainrs
@@ -29,58 +29,80 @@ all: $(C_TARGETS) $(R_TARGETS)
 clean:
 	rm -f $(C_TARGETS) $(R_TARGETS)
 
-# --- Running ----------------------------------------------------------------
+# --- Running (with Valgrind, prettified) -------------------------------------
 
 run: all
-	@echo "Running programs..."
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🚀  Running programs (with Valgrind)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
 	@for d in $(SUBDIRS); do \
 		if [ -f "$$d/main" ] || [ -f "$$d/mainrs" ]; then \
-			echo "==> Directory $$d"; \
+			echo ""; \
+			echo "📁 \033[1;34m$$d\033[0m"; \
+			echo "────────────────────────────────────────────"; \
 			if [ -f "$$d/main" ]; then \
 				if [ -f "$$d/input.txt" ]; then \
-					echo "Running C program with valgrind and input.txt"; \
+					echo "🟢 \033[1;32mC + valgrind\033[0m (with input.txt)"; \
 					$(VALGRIND) ./$$d/main $$d/input.txt; \
 				else \
-					echo "Running C program with valgrind (no input.txt)"; \
+					echo "🟢 \033[1;32mC + valgrind\033[0m (no input.txt)"; \
 					$(VALGRIND) ./$$d/main; \
 				fi; \
 			fi; \
 			if [ -f "$$d/mainrs" ]; then \
 				if [ -f "$$d/input.txt" ]; then \
-					echo "Running Rust program with input.txt"; \
+					echo "🦀 \033[1;33mRust\033[0m (with input.txt)"; \
 					./$$d/mainrs $$d/input.txt; \
 				else \
-					echo "Running Rust program (no input.txt)"; \
+					echo "🦀 \033[1;33mRust\033[0m (no input.txt)"; \
 					./$$d/mainrs; \
 				fi; \
 			fi; \
 		fi; \
 	done
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅  Done"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# --- Running without Valgrind -----------------------------------------------
+# --- Running without Valgrind (prettified) -----------------------------------
 
 run-fast: all
-	@echo "Running programs (without valgrind)..."
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "⚡  Running programs (FAST mode, no Valgrind)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
 	@for d in $(SUBDIRS); do \
 		if [ -f "$$d/main" ] || [ -f "$$d/mainrs" ]; then \
-			echo "==> Directory $$d"; \
+			echo ""; \
+			echo "📁 \033[1;34m$$d\033[0m"; \
+			echo "────────────────────────────────────────────"; \
 			if [ -f "$$d/main" ]; then \
 				if [ -f "$$d/input.txt" ]; then \
-					echo "Running C program"; \
+					echo "🟢 \033[1;32mC\033[0m (with input.txt)"; \
 					./$$d/main $$d/input.txt; \
 				else \
+					echo "🟢 \033[1;32mC\033[0m (no input.txt)"; \
 					./$$d/main; \
 				fi; \
 			fi; \
 			if [ -f "$$d/mainrs" ]; then \
 				if [ -f "$$d/input.txt" ]; then \
-					echo "Running Rust program"; \
+					echo "🦀 \033[1;33mRust\033[0m (with input.txt)"; \
 					./$$d/mainrs $$d/input.txt; \
 				else \
+					echo "🦀 \033[1;33mRust\033[0m (no input.txt)"; \
 					./$$d/mainrs; \
 				fi; \
 			fi; \
 		fi; \
 	done
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅  Done"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 .PHONY: all clean run run-fast
