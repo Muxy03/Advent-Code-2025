@@ -9,3 +9,7 @@
 
 # Ignore input files
 **/input.txt
+
+# Ignore IDE files
+.vscode
+.idea

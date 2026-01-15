@@ -20,11 +20,11 @@ all: $(C_TARGETS) $(OPT_TARGETS) $(R_TARGETS)
 
 # Build C programs → output: main
 %/main: %/main.c nob.h
-	$(CC) $< -O3 -o $@ -lm
+	$(CC) --std=c23 $< -O3 -o $@ -lm
 
 # Build optimized C programs → output: optimized
 %/optimized: %/optimized.c nob.h
-	$(CC) $< -O3 -o $@ -lm
+	$(CC) --std=c23 $< -O3 -o $@ -lm
 
 # Build Rust programs → output: mainrs
 %/mainrs: %/main.rs

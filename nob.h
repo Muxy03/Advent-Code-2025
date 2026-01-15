@@ -98,17 +98,19 @@
     size_t tmp_count = a.count; a.count = b.count; b.count = tmp_count;              \
     size_t tmp_cap = a.capacity; a.capacity = b.capacity; b.capacity = tmp_cap;      \
 } while(0)
-    
-// --- Types ---
-#define ll long long           // typedef long long ll;
-#define uch unsigned char      // typedef unsigned char uch;
-#define ull unsigned long long // typedef unsigned long long ull;
-#define string char*           // typedef char* string;
 
+// --- Types ---
+typedef char* string;
+typedef long long ll;
+typedef unsigned char uch;
+typedef unsigned int uint;
+typedef unsigned long long ull;
+
+// --- Structs ---
 typedef struct {
     string items;
-    size_t count;
-    size_t capacity;
+    uint count;
+    uint capacity;
 } DA;
 
 // --- Functions --
@@ -142,4 +144,57 @@ static ssize_t getline_or_die(char **lineptr, size_t *n, FILE *stream) {
     return len;
 }
 
+static void *xmalloc(size_t s) {
+    void *p = malloc(s);
+    if (!p) { fprintf(stderr, "out of memory\n"); exit(1); }
+    return p;
+}
+
+// ---
+
+	#ifdef DSU_IMPLEMENTATION
+
+	typedef struct {
+	    int n;
+	    int *parent;
+	    int *rank;
+	} DSU;
+
+	static DSU *dsu_create(int n) {
+	    DSU *d = xmalloc(sizeof(DSU));
+
+	    d->n = n;
+	    d->parent = xmalloc(n * sizeof(int));
+	    d->rank = xmalloc(n * sizeof(int));
+
+	    memset(d->rank, 0, n * sizeof(int));
+
+	    for (int i = 0; i < n; ++i) d->parent[i] = i;
+
+	    return d;
+	}
+
+	static int dsu_find(DSU *d, int x) {
+	    if (d->parent[x] != x) d->parent[x] = dsu_find(d, d->parent[x]);
+	    return d->parent[x];
+	}
+
+	static int dsu_union(DSU *d, int a, int b) {
+	    int ra = dsu_find(d, a);
+	    int rb = dsu_find(d, b);
+	    if (ra == rb) return 0;
+	    if (d->rank[ra] < d->rank[rb]) d->parent[ra] = rb;
+	    else if (d->rank[rb] < d->rank[ra]) d->parent[rb] = ra;
+	    else { d->parent[rb] = ra; d->rank[ra]++; }
+	    return 1;
+	}
+
+	void dsu_free(DSU *d) {
+	    if (!d) return;
+	    free(d->parent);
+	    free(d->rank);
+	    free(d);
+	}
+	
+	#endif // DSU_IMPLEMENTATION
 #endif // NOB_H
